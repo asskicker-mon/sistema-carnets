@@ -3,180 +3,146 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centro de Control de Carnets Inteligente (Nube)</title>
+    <title>Control de Carnets (Nube)</title>
+    <script src="https://jsdelivr.net"></script>
     <script src="https://jsdelivr.net"></script>
     <script src="https://jsdelivr.net"></script>
 </head>
-<body class="p-6 bg-slate-900 min-h-screen font-sans text-slate-100">
+<body class="p-6 bg-slate-950 text-slate-100 font-sans antialiased">
+    <div class="max-w-7xl mx-auto">
+        <!-- HEADER -->
+        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 gap-4 mb-6 shadow-2xl">
+            <div>
+                <h1 class="text-2xl font-black text-indigo-400">Central de Datos & Carnets</h1>
+                <p class="text-xs text-slate-400 mt-1">Paridad e individualización automática libre de columnas rígidas.</p>
+            </div>
+            <div class="flex flex-wrap gap-2 w-full lg:w-auto">
+                <button id="btnRes" onclick="toggleResaltador()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl border border-slate-700 cursor-pointer">✨ Activar Resaltador</button>
+                <button onclick="mezclar()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl cursor-pointer">🔀 Mezclar Registros</button>
+                <button onclick="unirPDFs()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black rounded-xl cursor-pointer">📦 Agrupar PDFs en Orden</button>
+                <button onclick="bajarExcel()" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl cursor-pointer">📥 Descargar Excel</button>
+            </div>
+        </header>
 
-    <!-- PANEL DE CONTROL CENTRAL -->
-    <div class="flex flex-wrap justify-between items-center bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl mb-6">
-        <div>
-            <h1 class="text-3xl font-extrabold tracking-tight text-indigo-400">Centro de Control de Carnets Inteligente</h1>
-            <p class="text-sm text-slate-400 mt-1">Detección global libre de filas y columnas · Multiusuario</p>
-        </div>
-        <div class="flex flex-wrap gap-3 mt-4 lg:mt-0">
-            <button id="btnResaltador" onclick="alternarResaltador()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all">
-                ⚪ Activar Resaltador
-            </button>
-            <button onclick="mezclarFilas()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all">
-                🔀 Mezclar Lista
-            </button>
-            <button onclick="unirPDFs()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all">
-                📄 Unir PDFs en Orden
-            </button>
-            <button onclick="descargarExcel()" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all">
-                📥 Descargar Excel
-            </button>
-        </div>
-    </div>
+        <!-- OPERACIONES -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                <label class="text-sm font-bold text-slate-300 block mb-2">Escáner de Excel Global</label>
+                <input type="file" accept=".xlsx" onchange="leerExcel(event)" class="text-xs text-slate-400 cursor-pointer" />
+            </div>
+            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
+                <label class="text-sm font-bold text-slate-300 block mb-2">Buscador en Tiempo Real</label>
+                <input id="txtBusca" type="text" oninput="buscar()" placeholder="Escribe el nombre a buscar..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500" />
+            </div>
+        </section>
 
-    <!-- SECCIÓN PARA SUBIR EXCEL LIBRE -->
-    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div class="text-sm text-slate-300">
-            <span class="font-bold text-indigo-400">Escáner Inteligente:</span> Sube cualquier Excel. El sistema buscará y extraerá todos los nombres automáticamente sin importar dónde estén.
+        <!-- GRILLA -->
+        <div class="flex justify-between items-center mb-4 px-1 text-xs text-slate-400">
+            <span class="font-bold uppercase tracking-wider">Tarjetas Individualizadas</span>
+            <span id="lblContador">0 Registros</span>
         </div>
-        <input type="file" accept=".xlsx" onchange="escanearExcelGlobal(event)" class="text-sm text-slate-400 cursor-pointer" />
-    </div>
-
-    <!-- VISTA INTERACTIVA EN REJILLA (MÁS CÓMODA QUE UNA TABLA RÍGIDA) -->
-    <div id="contenedorTarjetas" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <!-- Las tarjetas interactivas se generarán aquí mágicamente -->
-        <div class="col-span-full p-12 text-center text-slate-500 font-medium bg-slate-800 rounded-2xl border border-slate-700">
-            No hay registros activos. Sube cualquier archivo Excel para iniciar el escaneo inteligente.
+        <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            <div class="col-span-full p-12 text-center text-slate-500 bg-slate-900 rounded-2xl border border-slate-800 text-xs">Carga un archivo Excel para activar la vista.</div>
         </div>
     </div>
 
     <script>
-        // CONFIGURACIÓN DE TU SUPABASE: Reemplaza con la URL de tu proyecto real
-        const SUPABASE_URL = "https://ktfjiiscacqgsnilbtvp.supabase.co/rest/v1/"; 
+        // CAMBIA ESTA URL POR LA DE TU PROYECTO REAL EN SUPABASE
+        const SUPABASE_URL = "https://URL_DE_TU_PROYECTO.supabase.co"; 
 
-        let registros = [];
-        let resaltadorActivo = false;
+        let datos = [], filtrados = [], resActivo = false;
 
-        // Limpieza de caracteres para emparejar con Supabase (Ñ -> N)
-        function normalizarNombreArchivo(texto) {
-            if (!texto) return "";
-            return texto.trim()
-                .normalize("NFD")
-                .replace(/[\u0300-\u036f]/g, "")
-                .replace(/[Ñ]/g, "N")
-                .replace(/[ñ]/g, "n");
+        function limpiarTexto(t) {
+            return t ? t.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[Ñ]/g, "N").replace(/[ñ]/g, "n") : "";
         }
 
-        // NUEVO MOTOR: Escanea el Excel de forma libre en toda la cuadrícula
-        function escanearExcelGlobal(e) {
-            const archivo = e.target.files;
-            if (!archivo || archivo.length === 0) return;
-            
-            const lector = new FileReader();
-            lector.onload = function(evt) {
-                const data = evt.target.result;
-                const libro = XLSX.read(data, { type: 'binary' });
-                const nombreHoja = libro.SheetNames[0];
-                const hoja = libro.Sheets[nombreHoja];
-                
-                let nombresDetectados = [];
-                
-                // Recorrer absolutamente todas las celdas del archivo Excel
-                for (let celdaRef in hoja) {
-                    // Ignorar propiedades internas de la librería (que empiezan con !)
-                    if (celdaRef[0] === '!') continue;
-                    
-                    const valorCelda = String(hoja[celdaRef].v).trim();
-                    
-                    // CRITERIO INTELIGENTE DE FILTRADO: 
-                    // Detecta si la celda contiene un nombre (tiene al menos un apellido/espacio, no es un número puro, ni fechas, ni textos cortos como "SI", "NO", o encabezados)
-                    if (valorCelda.length > 5 && isNaN(valorCelda) && valorCelda.includes(" ") && !valorCelda.includes("/") && !valorCelda.toLowerCase().includes("carnet") && !valorCelda.toLowerCase().includes("total")) {
-                        // Evitar nombres duplicados en el mismo escaneo
-                        if (!nombresDetectados.includes(valorCelda)) {
-                            nombresDetectados.push(valorCelda);
-                        }
+        function leerExcel(e) {
+            const f = e.target.files; if (!f || f.length === 0) return;
+            const l = new FileReader();
+            l.onload = function(evt) {
+                const b = XLSX.read(evt.target.result, { type: 'binary' });
+                const h = b.Sheets[b.SheetNames[0]];
+                let nm = [];
+                for (let c in h) {
+                    if (c.startsWith('!')) continue;
+                    const v = String(h[c].v).trim();
+                    if (v.length > 5 && isNaN(v) && v.includes(" ") && !v.includes("/") && !v.toLowerCase().includes("total") && !v.toLowerCase().includes("carnet")) {
+                        if (!nm.includes(v)) nm.push(v);
                     }
                 }
-                
-                // Mapear los nombres encontrados a nuestro sistema dinámico
-                registros = nombresDetectados.map((nombre, index) => ({
-                    id: index + 1,
-                    nombre: nombre
-                }));
-
-                renderizarInterfazInteractiva();
+                datos = nm.map((n, i) => ({ id: i + 1, r: n, file: limpiarTexto(n) + ".pdf" }));
+                filtrados = [...datos];
+                document.getElementById("lblContador").innerText = `${datos.length} Registros`;
+                document.getElementById("txtBusca").value = "";
+                pintar();
             };
-            lector.readAsBinaryString(archivo);
+            l.readAsBinaryString(f[0]);
         }
 
-        // NUEVA INTERFAZ MODERNA: Cambiamos la tabla rígida por tarjetas interactivas visuales
-        function renderizarInterfazInteractiva() {
-            const contenedor = document.getElementById("contenedorTarjetas");
-            contenedor.innerHTML = "";
-
-            if (registros.length === 0) {
-                contenedor.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 font-medium bg-slate-800 rounded-2xl border border-slate-700">No se encontraron nombres válidos en el archivo.</div>`;
-                return;
+        function pintar() {
+            const g = document.getElementById("grid"); g.innerHTML = "";
+            if (filtrados.length === 0) {
+                g.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900 border border-slate-800 rounded-xl text-xs">Sin coincidencias.</div>`; return;
             }
-
-            registros.forEach((reg) => {
-                const tarjeta = document.createElement("div");
-                // Estilo visual cómodo y moderno
-                tarjeta.className = "bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-lg flex flex-col justify-between items-start gap-4 transition-all duration-200";
+            filtrados.forEach((item) => {
+                const d = document.createElement("div");
+                d.className = "bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-md flex flex-col justify-between gap-3 transition-all select-none";
+                d.onmouseenter = () => { if (resActivo) d.className = "bg-indigo-600/10 p-4 rounded-xl border border-indigo-500 shadow-md flex flex-col justify-between gap-3 scale-[1.02] transition-all"; };
+                d.onmouseleave = () => { d.className = "bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-md flex flex-col justify-between gap-3 transition-all"; };
                 
-                // Interactividad: El resaltador ahora ilumina la tarjeta completa de forma elegante al pasar el mouse
-                tarjeta.onmouseenter = () => {
-                    if(resaltadorActivo) {
-                        tarjeta.classList.remove("bg-slate-800", "border-slate-700");
-                        tarjeta.classList.add("bg-indigo-600/20", "border-indigo-500", "scale-[1.02]");
-                    }
-                };
-                tarjeta.onmouseleave = () => {
-                    tarjeta.classList.remove("bg-indigo-600/20", "border-indigo-500", "scale-[1.02]");
-                    tarjeta.classList.add("bg-slate-800", "border-slate-700");
-                };
-
-                const nombreLimpioParaStorage = normalizarNombreArchivo(reg.nombre);
-                const urlPdfSegura = `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(nombreLimpioParaStorage)}.pdf`;
-
-                tarjeta.innerHTML = `
-                    <div class="w-full">
-                        <span class="text-xs font-bold text-slate-500 uppercase tracking-wider block mb-1">Registro #${reg.id}</span>
-                        <h3 class="text-lg font-bold text-slate-100 truncate w-full" title="${reg.nombre}">${reg.nombre}</h3>
-                    </div>
-                    <button onclick="window.open('${urlPdfSegura}', '_blank')" class="w-full text-center py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-xl font-bold text-xs border border-emerald-500/20 transition-all cursor-pointer">
-                        🟢 Abrir Carnet PDF
-                    </button>
-                `;
-                contenedor.appendChild(tarjeta);
+                const url = `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(item.file)}`;
+                d.innerHTML = `<div class="w-full"><span class="text-[10px] font-bold text-slate-500 block mb-0.5">ID #${item.id}</span><h3 class="text-sm font-bold text-slate-100 truncate" title="${item.r}">${item.r}</h3></div><button onclick="window.open('${url}', '_blank')" class="w-full text-center py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-xl font-bold text-xs border border-emerald-500/20 transition-all cursor-pointer">🟢 Abrir PDF</button>`;
+                g.appendChild(d);
             });
         }
 
-        function alternarResaltador() {
-            resaltadorActivo = !resaltadorActivo;
-            const btn = document.getElementById("btnResaltador");
-            if(resaltadorActivo) {
-                btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all ring-2 ring-indigo-400 cursor-pointer";
-                btn.innerText = "🟢 Resaltador: ACTIVO";
-            } else {
-                btn.className = "bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all cursor-pointer";
-                btn.innerText = "⚪ Activar Resaltador";
-            }
+        function buscar() {
+            const q = document.getElementById("txtBusca").value.toLowerCase().trim();
+            filtrados = q === "" ? [...datos] : datos.filter(r => r.r.toLowerCase().includes(q));
+            pintar();
         }
 
-        function mezclarFilas() {
-            if (registros.length < 2) return alert("Carga datos primero.");
-            let i = registros.length;
-            while (i > 1) {
-                i--;
-                const j = Math.floor(Math.random() * (i + 1));
-                [registros[i], registros[j]] = [registros[j], registros[i]];
-            }
-            renderizarInterfazInteractiva();
+        function toggleResaltador() {
+            resActivo = !resActivo; const b = document.getElementById("btnRes");
+            b.className = resActivo ? "px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl ring-2 ring-indigo-400 cursor-pointer" : "px-4 py-2 bg-slate-800 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 cursor-pointer";
+            b.innerText = resActivo ? "🟢 Resaltador Activo" : "✨ Activar Resaltador";
         }
 
-        function descargarExcel() {
-            if (registros.length === 0) return alert("No hay datos para exportar.");
-            const filasExcel = registros.map(r => {
-                const nombreLimpio = normalizarNombreArchivo(r.nombre);
-                return {
-                    "Nro": r.id,
-                    "Nombre Persona": r.nombre,
-                    "Enlace Nube PDF": `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(nombreLimpio)}.pdf`
+        function mezclar() {
+            if (filtrados.length < 2) return alert("Carga datos primero.");
+            let i = filtrados.length;
+            while (i > 1) { i--; const j = Math.floor(Math.random() * (i + 1)); [filtrados[i], filtrados[j]] = [filtrados[j], filtrados[i]]; }
+            pintar();
+        }
+
+        function bajarExcel() {
+            if (filtrados.length === 0) return alert("No hay datos.");
+            const exportData = filtrados.map((r, i) => ({ "Orden": i + 7, "Nombre": r.r, "Enlace (AL)": `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(r.file)}` }));
+            const ws = XLSX.utils.json_to_sheet(exportData); const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Control"); XLSX.writeFile(wb, "REPORTE_NUBE.xlsx");
+        }
+
+        async function unirPDFs() {
+            if (filtrados.length === 0) return alert("No hay datos.");
+            alert(`Iniciando agrupación de ${filtrados.length} archivos en el orden visual de la pantalla.`);
+            try {
+                const master = await PDFLib.PDFDocument.create(); let c = 0;
+                for (const item of filtrados) {
+                    try {
+                        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(item.file)}`);
+                        if (!res.ok) continue;
+                        const doc = await PDFLib.PDFDocument.load(await res.arrayBuffer());
+                        const pgs = await master.copyPages(doc, doc.getPageIndices());
+                        pgs.forEach(p => master.addPage(p)); c++;
+                    } catch(e) {}
+                }
+                if (c === 0) return alert("Ningún nombre coincide con archivos reales en Supabase.");
+                const bytes = await master.save(); const blob = new Blob([bytes], { type: "application/pdf" });
+                const l = document.createElement("a"); l.href = URL.createObjectURL(blob); l.download = `LOTE_UNIDO_${Date.now()}.pdf`;
+                document.body.appendChild(l); l.click(); document.body.removeChild(l);
+                alert(`¡Éxito! Se han agrupado ${c} archivos en orden secuencial perfecto.`);
+            } catch (err) { alert("Error crítico: " + err.message); }
+        }
+    </script>
+</body>
+</html>
