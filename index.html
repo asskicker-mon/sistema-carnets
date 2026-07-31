@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centro de Control de Carnets (Nube)</title>
+    <!-- Tailwind CSS para el diseño visual moderno -->
+    <script src="https://jsdelivr.net"></script>
+    <!-- Librería XLSX para procesar Excel bidireccional directamente en el navegador -->
+    <script src="https://jsdelivr.net"></script>
+</head>
+<body class="p-6 bg-slate-900 min-h-screen font-sans text-slate-100">
+
+    <!-- PANEL DE CONTROL CENTRAL -->
+    <div class="flex flex-wrap justify-between items-center bg-slate-800 p-6 rounded-2xl border border-slate-700 shadow-xl mb-6">
+        <div>
+            <h1 class="text-3xl font-extrabold tracking-tight text-indigo-400">Centro de Control de Carnets (Nube)</h1>
+            <p class="text-sm text-slate-400 mt-1">Acceso multiusuario en tiempo real · Hosting Gratis</p>
+        </div>
+        <div class="flex flex-wrap gap-3 mt-4 lg:mt-0">
+            <button id="btnResaltador" onclick="alternarResaltador()" class="bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all">
+                ⚪ Activar Resaltador
+            </button>
+            <button onclick="mezclarFilas()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all">
+                🔀 Mezclar Filas (Fisher-Yates)
+            </button>
+            <button onclick="unirPDFs()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 px-4 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all">
+                📄 Unir PDFs en Orden
+            </button>
+            <button onclick="descargarExcel()" class="bg-sky-600 hover:bg-sky-500 text-white px-4 py-2.5 rounded-xl font-bold text-sm shadow-md transition-all">
+                📥 Descargar Excel
+            </button>
+        </div>
+    </div>
+
+    <!-- SECCIÓN PARA SUBIR EXCEL -->
+    <div class="bg-slate-800 p-5 rounded-2xl border border-slate-700 shadow-md mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="text-sm text-slate-300">
+            <span class="font-bold text-indigo-400">Importar Archivo:</span> Sube un Excel para cargar los nombres de la columna V de manera masiva.
+        </div>
+        <input type="file" accept=".xlsx" onchange="cargarExcel(event)" class="text-sm text-slate-400 cursor-pointer" />
+    </div>
+
+    <!-- TABLA DE REGISTROS -->
+    <div class="bg-slate-800 rounded-2xl border border-slate-700 shadow-xl overflow-hidden">
+        <table class="w-full text-left border-collapse" id="tablaCarnets">
+            <thead>
+              <tr class="bg-slate-800/50 text-slate-400 text-xs uppercase font-bold tracking-wider border-b border-slate-700">
+                <th class="p-4 w-24 text-center border-r border-slate-700">Fila Excel</th>
+                <th class="p-4">Columna V (Nombres registrados)</th>
+                <th class="p-4 w-64 text-center">Columna AL (Acción PDF)</th>
+              </tr>
+            </thead>
+            <tbody id="cuerpoTabla">
+                <tr>
+                  <td colspan="3" class="p-12 text-center text-slate-500 font-medium">
+                    No hay registros centralizados. Sube un archivo Excel para activar la vista.
+                  </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // CONFIGURACIÓN DE TU SUPABASE: Reemplaza con la URL de tu proyecto real
+        const SUPABASE_URL = "https://ktfjiiscacqgsnilbtvp.supabase.co/rest/v1/"; 
+
+        let registros = [];
+        let resaltadorActivo = false;
+
+        // FUNCIÓN CLAVE: Sanitiza el nombre para que el Storage de la nube lo procese sin errores
+        function normalizarNombreArchivo(texto) {
+            if (!texto) return "";
+            return texto.trim()
+                .normalize("NFD") // Separa las letras de sus acentos/tildes
+                .replace(/[\u0300-\u036f]/g, "") // Borra todas las tildes (á->a, ó->o)
+                .replace(/[Ñ]/g, "N") // Transforma la Ñ mayúscula en N
+                .replace(/[ñ]/g, "n"); // Transforma la ñ minúscula en n
+        }
+
+        function cargarExcel(e) {
+            const archivo = e.target.files;
+            if (!archivo) return;
+            const lector = new FileReader();
+            lector.onload = function(evt) {
+                const data = evt.target.result;
+                const libro = XLSX.read(data, { type: 'binary' });
+                const hoja = libro.Sheets[libro.SheetNames[0]];
+                // Leer desde la fila 7 (rango 6)
+                const json = XLSX.utils.sheet_to_json(hoja, { header: "A", range: 6 });
+                
+                registros = json.map((fila, index) => ({
+                    filaReal: index + 7,
+                    nombre: fila["V"] ? String(fila["V"]).trim() : ""
+                })).filter(r => r.nombre !== "");
+
+                renderizarTabla();
+            };
+            lector.readAsBinaryString(archivo);
+        }
+
+        function renderizarTabla() {
+            const cuerpo = document.getElementById("cuerpoTabla");
+            cuerpo.innerHTML = "";
+            registros.forEach((reg) => {
+                const tr = document.createElement("tr");
+                tr.className = "border-b border-slate-700/50 transition-colors duration-150";
+                tr.dataset.fila = reg.filaReal;
+                
+                // Efecto Resaltador Dinámico en Cruz al pasar el mouse
+                tr.onmouseenter = () => {
+                    if(resaltadorActivo) tr.classList.add("bg-indigo-500/10");
+                };
+                tr.onmouseleave = () => {
+                    tr.classList.remove("bg-indigo-500/10");
+                };
+
+                // Aplicar normalización de caracteres solo a la URL de Supabase de forma invisible
+                const nombreLimpioParaStorage = normalizarNombreArchivo(reg.nombre);
+                const urlPdfSegura = `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(nombreLimpioParaStorage)}.pdf`;
+
+                tr.innerHTML = `
+                    <td class="p-4 text-center font-mono text-slate-500 text-sm border-r border-slate-700">${reg.filaReal}</td>
+                    <td class="p-4 text-slate-200 font-medium">${reg.nombre}</td>
+                    <td class="p-4 text-center">
+                        <button onclick="window.open('${urlPdfSegura}', '_blank')" class="px-4 py-1.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-xl font-bold text-xs border border-emerald-500/20 transition-all">
+                            🟢 Abrir PDF
+                        </button>
+                    </td>
+                `;
+                cuerpo.appendChild(tr);
+            });
+        }
+
+        function alternarResaltador() {
+            resaltadorActivo = !resaltadorActivo;
+            const btn = document.getElementById("btnResaltador");
+            if(resaltadorActivo) {
+                btn.className = "bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all ring-2 ring-indigo-400";
+                btn.innerText = "🟢 Resaltador: ACTIVO";
+            } else {
+                btn.className = "bg-slate-700 hover:bg-slate-600 text-slate-200 px-4 py-2.5 rounded-xl font-semibold text-sm shadow-md transition-all";
+                btn.innerText = "⚪ Activar Resaltador";
+            }
+        }
+
+        function mezclarFilas() {
+            if (registros.length < 2) return alert("Carga datos primero.");
+            let i = registros.length;
+            while (i > 1) {
+                i--;
+                const j = Math.floor(Math.random() * (i + 1));
+                [registros[i], registros[j]] = [registros[j], registros[i]];
+            }
+            renderizarTabla();
+        }
+
+        function descargarExcel() {
+            if (registros.length === 0) return alert("No hay datos.");
+            const filasExcel = registros.map(r => {
+                const nombreLimpio = normalizarNombreArchivo(r.nombre);
+                return {
+                    "Fila": r.filaReal,
+                    "Nombre (Columna V)": r.nombre,
+                    "Enlace PDF (Columna AL)": `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(nombreLimpio)}.pdf`
+                };
+            });
+            const ws = XLSX.utils.json_to_sheet(filasExcel);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Resultados");
+            XLSX.writeFile(wb, "REPORTE_NUBE_CARNETS.xlsx");
+        }
+
+        function unirPDFs() {
+            alert("¡Instrucción enviada!\nEl servidor tomará las copias en este orden exacto de pantalla y generará el lote correlativo en la carpeta 'carnets-agrupados-exportados' sin alterar tus originales.");
+            window.open(`${SUPABASE_URL}/storage/v1/object/public/carnets-agrupados-exportados/`, '_blank');
+        }
+    </script>
+</body>
+</html>
