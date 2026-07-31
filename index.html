@@ -3,145 +3,298 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Control de Carnets (Nube)</title>
+    <title>Plataforma de Control de Carnets (Nube de Alto Rendimiento)</title>
+    <!-- Framework de Estilos Optimizado Tailwind v4 -->
     <script src="https://jsdelivr.net"></script>
+    <!-- Librería XLSX para Procesamiento Matricial de Excel -->
     <script src="https://jsdelivr.net"></script>
+    <!-- Motor PDF-lib para Descarga y Clonación de Archivos en Memoria Virtual -->
     <script src="https://jsdelivr.net"></script>
 </head>
-<body class="p-6 bg-slate-950 text-slate-100 font-sans antialiased">
+<body class="p-6 bg-slate-950 min-h-screen font-sans text-slate-100 antialiased selection:bg-indigo-500 selection:text-white">
+
     <div class="max-w-7xl mx-auto">
-        <!-- HEADER -->
-        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 gap-4 mb-6 shadow-2xl">
+        
+        <!-- ENCABEZADO MULTIUSUARIO -->
+        <header class="flex flex-col lg:flex-row justify-between items-start lg:items-center bg-slate-900 p-6 rounded-3xl border border-slate-800 shadow-2xl gap-6 mb-6">
             <div>
-                <h1 class="text-2xl font-black text-indigo-400">Central de Datos & Carnets</h1>
-                <p class="text-xs text-slate-400 mt-1">Paridad e individualización automática libre de columnas rígidas.</p>
+                <div class="flex items-center gap-3">
+                    <span class="px-3 py-1 bg-indigo-500/10 text-indigo-400 text-xs font-bold rounded-full border border-indigo-500/20 uppercase tracking-widest">Servidor Activo</span>
+                    <span class="text-xs text-slate-500">Sesión Multiusuario Online</span>
+                </div>
+                <h1 class="text-3xl font-black bg-gradient-to-r from-indigo-400 via-sky-400 to-emerald-400 bg-clip-text text-transparent mt-1">
+                    Central de Datos & Gestión de Carnets
+                </h1>
+                <p class="text-sm text-slate-400 mt-1">Paridad e individualización automatizada libre de filas y columnas rígidas.</p>
             </div>
-            <div class="flex flex-wrap gap-2 w-full lg:w-auto">
-                <button id="btnRes" onclick="toggleResaltador()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-bold rounded-xl border border-slate-700 cursor-pointer">✨ Activar Resaltador</button>
-                <button onclick="mezclar()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-black rounded-xl cursor-pointer">🔀 Mezclar Registros</button>
-                <button onclick="unirPDFs()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs font-black rounded-xl cursor-pointer">📦 Agrupar PDFs en Orden</button>
-                <button onclick="bajarExcel()" class="px-4 py-2 bg-sky-600 hover:bg-sky-500 text-white text-xs font-bold rounded-xl cursor-pointer">📥 Descargar Excel</button>
+            
+            <!-- ACCIONES GENERALES DEL SISTEMA WEB -->
+            <div class="flex flex-wrap gap-3 w-full lg:w-auto">
+                <button id="btnResaltador" onclick="alternarResaltador()" class="flex-1 lg:flex-none px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-sm shadow-lg border border-slate-700 transition-all duration-200 cursor-pointer">
+                    ✨ Activar Resaltador Guía
+                </button>
+                <button onclick="mezclarListaAleatoria()" class="flex-1 lg:flex-none px-5 py-3 bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-xl font-black text-sm shadow-lg transition-all duration-200 cursor-pointer">
+                    🔀 Mezclar Registros
+                </button>
+                <button onclick="agruparYFusionarPDFs()" class="flex-1 lg:flex-none px-5 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-slate-950 rounded-xl font-black text-sm shadow-lg transition-all duration-200 cursor-pointer">
+                    📦 Agrupar PDFs en Orden
+                </button>
             </div>
         </header>
 
-        <!-- OPERACIONES -->
-        <section class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-                <label class="text-sm font-bold text-slate-300 block mb-2">Escáner de Excel Global</label>
-                <input type="file" accept=".xlsx" onchange="leerExcel(event)" class="text-xs text-slate-400 cursor-pointer" />
+        <!-- ACCIONES COMPLEMENTARIAS: CARGA DE ARCHIVOS Y BUSCADORES REACIVOS -->
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <!-- Bloque Escáner -->
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-200">Escáner de Datos Libre</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Sube cualquier Excel; se extraerán nombres de personas ignorando celdas vacías.</p>
+                </div>
+                <div class="relative group border-2 border-dashed border-slate-700 hover:border-indigo-500 rounded-xl p-4 transition-all bg-slate-950 flex items-center justify-center min-h-[90px]">
+                    <input type="file" accept=".xlsx" onchange="escanearExcelGlobal(event)" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                    <div class="text-center pointer-events-none">
+                        <span class="text-sm font-bold text-indigo-400 block group-hover:text-indigo-300">Seleccionar o arrastrar archivo Excel</span>
+                        <span class="text-xs text-slate-500 block mt-0.5">Soporta formatos universales .xlsx</span>
+                    </div>
+                </div>
             </div>
-            <div class="bg-slate-900 p-5 rounded-2xl border border-slate-800">
-                <label class="text-sm font-bold text-slate-300 block mb-2">Buscador en Tiempo Real</label>
-                <input id="txtBusca" type="text" oninput="buscar()" placeholder="Escribe el nombre a buscar..." class="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500" />
+
+            <!-- Bloque Búsqueda -->
+            <div class="bg-slate-900 p-6 rounded-2xl border border-slate-800 shadow-xl flex flex-col justify-between gap-4">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-200">Apartado de Filtro y Búsqueda</h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Localiza de forma inmediata a cualquier persona registrada en la cuadrícula de datos.</p>
+                </div>
+                <div class="relative bg-slate-950 rounded-xl border border-slate-700 focus-within:border-indigo-500 transition-all p-1 flex items-center">
+                    <input id="buscadorInput" type="text" oninput="filtrarBusqueda()" placeholder="Escribe el nombre de la persona a buscar..." class="w-full bg-transparent px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none" />
+                </div>
             </div>
         </section>
 
-        <!-- GRILLA -->
-        <div class="flex justify-between items-center mb-4 px-1 text-xs text-slate-400">
-            <span class="font-bold uppercase tracking-wider">Tarjetas Individualizadas</span>
-            <span id="lblContador">0 Registros</span>
-        </div>
-        <div id="grid" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div class="col-span-full p-12 text-center text-slate-500 bg-slate-900 rounded-2xl border border-slate-800 text-xs">Carga un archivo Excel para activar la vista.</div>
-        </div>
+        <!-- SECCIÓN DE EXPORTACIÓN Y PANEL PRINCIPAL -->
+        <main>
+            <div class="flex justify-between items-center mb-4 px-2">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-slate-400">Panel de Control General de Carnets</h2>
+                <div class="flex items-center gap-4">
+                    <button onclick="descargarExcel()" class="px-3 py-1.5 bg-sky-600/10 text-sky-400 hover:bg-sky-600/20 text-xs font-bold rounded-lg border border-sky-500/20 transition-all cursor-pointer">📥 Descargar Excel Resumen (AL)</button>
+                    <span id="contadorRegistros" class="text-xs font-mono text-slate-500">0 Registros Detectados</span>
+                </div>
+            </div>
+            
+            <div id="gridContenedores" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                <!-- Estado Inicial Vacío -->
+                <div class="col-span-full p-16 text-center text-slate-500 bg-slate-900 rounded-3xl border border-slate-800 shadow-inner">
+                    <span class="text-base font-bold text-slate-400 block">Plataforma Vacía</span>
+                    <span class="text-xs text-slate-500 block mt-1">Sube un Excel en el panel superior para activar el mapeo de nombres de carnets.</span>
+                </div>
+            </div>
+        </main>
+
     </div>
-
     <script>
-        // CAMBIA ESTA URL POR LA DE TU PROYECTO REAL EN SUPABASE
-        const SUPABASE_URL = "https://URL_DE_TU_PROYECTO.supabase.co"; 
+        // CONFIGURACIÓN DE TU INFRAESTRUCTURA SUPABASE
+        // REMPLAZA ESTA URL POR LA DE TU PROYECTO REAL PARA ENLAZAR EL STORAGE
+        const SUPABASE_URL = "https://ktfjiiscacqgsnilbtvp.supabase.co/rest/v1/"; 
 
-        let datos = [], filtrados = [], resActivo = false;
+        let baseDatosCompleta = [];
+        let registrosFiltrados = [];
+        let resaltadorActivo = false;
 
-        function limpiarTexto(t) {
-            return t ? t.trim().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[Ñ]/g, "N").replace(/[ñ]/g, "n") : "";
+        // FUNCIÓN MAESTRA DE PARIDAD DIGITAL: Convierte Ñ a N y elimina acentos para cruzar datos con la nube
+        function normalizarParaNube(texto) {
+            if (!texto) return "";
+            return texto.trim()
+                .normalize("NFD")
+                .replace(/[\u0300-\u036f]/g, "") // Elimina acentos
+                .replace(/[Ñ]/g, "N")           // Ñ mayúscula a N
+                .replace(/[ñ]/g, "n");           // ñ minúscula a n
         }
 
-        function leerExcel(e) {
-            const f = e.target.files; if (!f || f.length === 0) return;
-            const l = new FileReader();
-            l.onload = function(evt) {
-                const b = XLSX.read(evt.target.result, { type: 'binary' });
-                const h = b.Sheets[b.SheetNames[0]];
-                let nm = [];
-                for (let c in h) {
-                    if (c.startsWith('!')) continue;
-                    const v = String(h[c].v).trim();
-                    if (v.length > 5 && isNaN(v) && v.includes(" ") && !v.includes("/") && !v.toLowerCase().includes("total") && !v.toLowerCase().includes("carnet")) {
-                        if (!nm.includes(v)) nm.push(v);
+        // MOTOR DE ESCÁNER GLOBAL (Libre de filas y columnas rígidas)
+        function escanearExcelGlobal(e) {
+            const archivos = e.target.files;
+            if (!archivos || archivos.length === 0) return;
+            
+            const lector = new FileReader();
+            lector.onload = function(evt) {
+                const dataBinaria = evt.target.result;
+                const libroWork = XLSX.read(dataBinaria, { type: 'binary' });
+                const nombreHoja = libroWork.SheetNames;
+                const hojaCalculo = libroWork.Sheets[nombreHoja];
+                
+                let nombresLimpios = [];
+                
+                // Inspección celular en toda la extensión de la cuadrícula Excel
+                for (let coordenada in hojaCalculo) {
+                    if (coordenada.startsWith('!')) continue;
+                    
+                    const valorCelda = String(hojaCalculo[coordenada].v).trim();
+                    
+                    // Discriminador Semántico: Detecta si es un nombre completo humano válido
+                    if (valorCelda.length > 5 && isNaN(valorCelda) && valorCelda.includes(" ") && !valorCelda.includes("/") && !valorCelda.toLowerCase().includes("total") && !valorCelda.toLowerCase().includes("carnet")) {
+                        if (!nombresLimpios.includes(valorCelda)) {
+                            nombresLimpios.push(valorCelda);
+                        }
                     }
                 }
-                datos = nm.map((n, i) => ({ id: i + 1, r: n, file: limpiarTexto(n) + ".pdf" }));
-                filtrados = [...datos];
-                document.getElementById("lblContador").innerText = `${datos.length} Registros`;
-                document.getElementById("txtBusca").value = "";
-                pintar();
+                
+                // Sincronizar con el Centro de Datos Virtual
+                baseDatosCompleta = nombresLimpios.map((nom, idx) => ({
+                    indice: idx + 1,
+                    nombreReal: nom,
+                    nombreArchivoNube: normalizarParaNube(nom) + ".pdf"
+                }));
+                
+                registrosFiltrados = [...baseDatosCompleta];
+                document.getElementById("contadorRegistros").innerText = `${baseDatosCompleta.length} Registros Centralizados`;
+                document.getElementById("buscadorInput").value = "";
+                renderizarInterfazSolida();
             };
-            l.readAsBinaryString(f[0]);
+            lector.readAsBinaryString(archivos);
         }
 
-        function pintar() {
-            const g = document.getElementById("grid"); g.innerHTML = "";
-            if (filtrados.length === 0) {
-                g.innerHTML = `<div class="col-span-full p-8 text-center text-slate-500 bg-slate-900 border border-slate-800 rounded-xl text-xs">Sin coincidencias.</div>`; return;
+        // CONTROL VISUAL: Renderiza las tarjetas de control interactivo (Grid Rejilla)
+        function renderizarInterfazSolida() {
+            const grid = document.getElementById("gridContenedores");
+            grid.innerHTML = "";
+
+            if (registrosFiltrados.length === 0) {
+                grid.innerHTML = `<div class="col-span-full p-12 text-center text-slate-500 font-bold bg-slate-900 border border-slate-800 rounded-2xl shadow-inner">No se encontraron coincidencias en la búsqueda.</div>`;
+                return;
             }
-            filtrados.forEach((item) => {
-                const d = document.createElement("div");
-                d.className = "bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-md flex flex-col justify-between gap-3 transition-all select-none";
-                d.onmouseenter = () => { if (resActivo) d.className = "bg-indigo-600/10 p-4 rounded-xl border border-indigo-500 shadow-md flex flex-col justify-between gap-3 scale-[1.02] transition-all"; };
-                d.onmouseleave = () => { d.className = "bg-slate-900 p-4 rounded-xl border border-slate-800 shadow-md flex flex-col justify-between gap-3 transition-all"; };
+
+            registrosFiltrados.forEach((reg) => {
+                const tarjeta = document.createElement("div");
+                tarjeta.className = "bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between items-start gap-4 transition-all duration-200 select-none";
                 
-                const url = `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(item.file)}`;
-                d.innerHTML = `<div class="w-full"><span class="text-[10px] font-bold text-slate-500 block mb-0.5">ID #${item.id}</span><h3 class="text-sm font-bold text-slate-100 truncate" title="${item.r}">${item.r}</h3></div><button onclick="window.open('${url}', '_blank')" class="w-full text-center py-2 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-xl font-bold text-xs border border-emerald-500/20 transition-all cursor-pointer">🟢 Abrir PDF</button>`;
-                g.appendChild(d);
+                // Interactividad avanzada del Resaltador Guía (Efecto Tarjeta Flotante)
+                tarjeta.onmouseenter = () => {
+                    if (resaltadorActivo) {
+                        tarjeta.className = "bg-indigo-600/10 p-5 rounded-2xl border border-indigo-500 shadow-md flex flex-col justify-between items-start gap-4 scale-[1.02] shadow-indigo-500/5 transition-all duration-200 select-none";
+                    }
+                };
+                tarjeta.onmouseleave = () => {
+                    tarjeta.className = "bg-slate-900 p-5 rounded-2xl border border-slate-800 shadow-md flex flex-col justify-between items-start gap-4 transition-all duration-200 select-none";
+                };
+
+                // URL con paridad calculada automáticamente hacia Supabase
+                const urlDestinoPdf = `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(reg.nombreArchivoNube)}`;
+
+                tarjeta.innerHTML = `
+                    <div class="w-full">
+                        <div class="flex justify-between items-center mb-1.5">
+                            <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest">ID Registro #${reg.indice}</span>
+                            <span class="w-2 h-2 rounded-full bg-emerald-400 shadow-sm shadow-emerald-400/50"></span>
+                        </div>
+                        <h3 class="text-base font-bold text-slate-100 truncate w-full" title="${reg.nombreReal}">${reg.nombreReal}</h3>
+                    </div>
+                    <button onclick="window.open('${urlDestinoPdf}', '_blank')" class="w-full text-center py-2.5 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 rounded-xl font-bold text-xs border border-emerald-500/20 transition-all cursor-pointer">
+                        🟢 Abrir PDF Individual
+                    </button>
+                `;
+                grid.appendChild(tarjeta);
             });
         }
-
-        function buscar() {
-            const q = document.getElementById("txtBusca").value.toLowerCase().trim();
-            filtrados = q === "" ? [...datos] : datos.filter(r => r.r.toLowerCase().includes(q));
-            pintar();
+        // APARTADO DE BÚSQUEDA INTERACTIVA EN TIEMPO REAL
+        function filtrarBusqueda() {
+            const consulta = document.getElementById("buscadorInput").value.toLowerCase().trim();
+            if (consulta === "") {
+                registrosFiltrados = [...baseDatosCompleta];
+            } else {
+                registrosFiltrados = baseDatosCompleta.filter(r => r.nombreReal.toLowerCase().includes(consulta));
+            }
+            renderizarInterfazSolida();
         }
 
-        function toggleResaltador() {
-            resActivo = !resActivo; const b = document.getElementById("btnRes");
-            b.className = resActivo ? "px-4 py-2 bg-indigo-600 text-white text-xs font-bold rounded-xl ring-2 ring-indigo-400 cursor-pointer" : "px-4 py-2 bg-slate-800 text-slate-200 text-xs font-bold rounded-xl border border-slate-700 cursor-pointer";
-            b.innerText = resActivo ? "🟢 Resaltador Activo" : "✨ Activar Resaltador";
+        // INTERRUPTOR DE GUÍA VISUAL
+        function alternarResaltador() {
+            resaltadorActivo = !resaltadorActivo;
+            const btn = document.getElementById("btnResaltador");
+            if (resaltadorActivo) {
+                btn.className = "flex-1 lg:flex-none px-5 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm shadow-lg ring-2 ring-indigo-400 transition-all duration-200 cursor-pointer";
+                btn.innerText = "🟢 Resaltador: ENCENDIDO";
+            } else {
+                btn.className = "flex-1 lg:flex-none px-5 py-3 bg-slate-800 hover:bg-slate-700 text-slate-200 rounded-xl font-bold text-sm shadow-lg border border-slate-700 transition-all duration-200 cursor-pointer";
+                btn.innerText = "✨ Activar Resaltador Guía";
+            }
         }
 
-        function mezclar() {
-            if (filtrados.length < 2) return alert("Carga datos primero.");
-            let i = filtrados.length;
-            while (i > 1) { i--; const j = Math.floor(Math.random() * (i + 1)); [filtrados[i], filtrados[j]] = [filtrados[j], filtrados[i]]; }
-            pintar();
+        // ALGORITMO FISHER-YATES: Desordena de forma perfecta sin alterar estructuras
+        function mezclarListaAleatoria() {
+            if (registrosFiltrados.length < 2) return alert("Carga o filtra datos con al menos 2 registros para desordenar.");
+            let i = registrosFiltrados.length;
+            while (i > 1) {
+                i--;
+                const j = Math.floor(Math.random() * (i + 1));
+                [registrosFiltrados[i], registrosFiltrados[j]] = [registrosFiltrados[j], registrosFiltrados[i]];
+            }
+            renderizarInterfazSolida();
         }
 
-        function bajarExcel() {
-            if (filtrados.length === 0) return alert("No hay datos.");
-            const exportData = filtrados.map((r, i) => ({ "Orden": i + 7, "Nombre": r.r, "Enlace (AL)": `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(r.file)}` }));
-            const ws = XLSX.utils.json_to_sheet(exportData); const wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Control"); XLSX.writeFile(wb, "REPORTE_NUBE.xlsx");
+        // EXCEL BIDIRECCIONAL: Descarga el orden exacto actual a un reporte limpio (Simula Columna AL)
+        function descargarExcel() {
+            if (registrosFiltrados.length === 0) return alert("No existen registros en pantalla para exportar.");
+            const exportarData = registrosFiltrados.map((r, i) => ({
+                "Orden de Lista": i + 7,
+                "Nombre Completo": r.nombreReal,
+                "Enlace Asignado (AL)": `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(r.nombreArchivoNube)}`
+            }));
+            const ws = XLSX.utils.json_to_sheet(exportarData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Control_Carnets");
+            XLSX.writeFile(wb, "REPORTE_NUBE_INTEGRAL.xlsx");
         }
 
-        async function unirPDFs() {
-            if (filtrados.length === 0) return alert("No hay datos.");
-            alert(`Iniciando agrupación de ${filtrados.length} archivos en el orden visual de la pantalla.`);
+        // MACRO DE AGRUPACIÓN SECUENCIAL (Clona y une PDFs en la memoria del Navegador en Orden)
+        async function agruparYFusionarPDFs() {
+            if (registrosFiltrados.length === 0) return alert("No hay datos en el panel para agrupar.");
+            
+            alert("¡Macro de Agrupación en la Nube Iniciada!\n\nSe descargarán temporalmente en la memoria los " + registrosFiltrados.length + " PDFs individualizados.\nSe unirán respetando estrictamente el orden secuencial de la pantalla.");
+
             try {
-                const master = await PDFLib.PDFDocument.create(); let c = 0;
-                for (const item of filtrados) {
+                // Crear el contenedor maestro del nuevo PDF unificado usando PDF-lib
+                const pdfMasterUnificado = await PDFLib.PDFDocument.create();
+                let archivosFusiadosContador = 0;
+
+                for (const reg of registrosFiltrados) {
+                    const urlPdfIndividual = `${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(reg.nombreArchivoNube)}`;
+                    
                     try {
-                        const res = await fetch(`${SUPABASE_URL}/storage/v1/object/public/general-carnets-individualizados/${encodeURIComponent(item.file)}`);
-                        if (!res.ok) continue;
-                        const doc = await PDFLib.PDFDocument.load(await res.arrayBuffer());
-                        const pgs = await master.copyPages(doc, doc.getPageIndices());
-                        pgs.forEach(p => master.addPage(p)); c++;
-                    } catch(e) {}
+                        // Descargar el binario del PDF individual de Supabase como un clon en memoria caché
+                        const response = await fetch(urlPdfIndividual);
+                        if (!response.ok) continue; // Si un carnet no está en el Storage, salta al siguiente de forma segura
+                        
+                        const arrayBufferPdf = await response.arrayBuffer();
+                        const documentoClonado = await PDFLib.PDFDocument.load(arrayBufferPdf);
+                        
+                        // Copiar y pegar las páginas del documento clonado al contenedor maestro secuencial
+                        const paginasCopiadas = await pdfMasterUnificado.copyPages(documentoClonado, documentoClonado.getPageIndices());
+                        paginasCopiadas.forEach((pagina) => pdfMasterUnificado.addPage(pagina));
+                        archivosFusiadosContador++;
+                    } catch (e) {
+                        console.error("Error al adquirir el archivo para: " + reg.nombreReal);
+                    }
                 }
-                if (c === 0) return alert("Ningún nombre coincide con archivos reales en Supabase.");
-                const bytes = await master.save(); const blob = new Blob([bytes], { type: "application/pdf" });
-                const l = document.createElement("a"); l.href = URL.createObjectURL(blob); l.download = `LOTE_UNIDO_${Date.now()}.pdf`;
-                document.body.appendChild(l); l.click(); document.body.removeChild(l);
-                alert(`¡Éxito! Se han agrupado ${c} archivos en orden secuencial perfecto.`);
-            } catch (err) { alert("Error crítico: " + err.message); }
+
+                if (archivosFusiadosContador === 0) {
+                    return alert("Error de Sincronización: Ninguno de los nombres de la pantalla coincide con archivos reales en tu Storage de Supabase.");
+                }
+
+                // Guardar la combinación, compilar los bytes y disparar la descarga directa al usuario
+                const pdfBytesFinales = await pdfMasterUnificado.save();
+                const blobPdf = new Blob([pdfBytesFinales], { type: "application/pdf" });
+                const linkDescarga = document.createElement("a");
+                linkDescarga.href = URL.createObjectURL(blobPdf);
+                linkDescarga.download = `LOTE_UNIDO_CORRELATIVO_${Date.now()}.pdf`;
+                document.body.appendChild(linkDescarga);
+                linkDescarga.click();
+                document.body.removeChild(linkDescarga);
+
+                alert("¡Éxito total!\nSe han clonado y agrupado con éxito " + archivosFusiadosContador + " archivos en orden secuencial perfecto.\nLos PDFs individuales en Supabase permanecen 100% intactos.");
+            
+            } catch (error) {
+                alert("Ocurrió un error crítico durante la unión de los documentos: " + error.message);
+            }
         }
     </script>
 </body>
